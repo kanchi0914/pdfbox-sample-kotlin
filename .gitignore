@@ -64,3 +64,4 @@ distTmp/
 outTmp/
 /test.output
 /kotlin-native/dist
+resources/

@@ -20,4 +20,12 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation('org.apache.pdfbox:pdfbox:2.0.4')
     implementation('org.bouncycastle:bcprov-jdk15on:1.55')
+    implementation group: 'org.im4java', name: 'im4java', version: '1.4.0'
 }
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'UTF-8'

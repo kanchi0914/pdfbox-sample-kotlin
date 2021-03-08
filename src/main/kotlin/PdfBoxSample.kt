@@ -8,18 +8,80 @@ import org.apache.pdfbox.pdmodel.encryption.AccessPermission
 import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject
+import java.awt.image.BufferedImage
+import java.io.BufferedReader
 import java.io.File
+import java.io.IOException
+import java.io.InputStreamReader
+import javax.imageio.ImageIO
 
 
 object PdfBoxSample {
 
     fun main() {
+        do2()
     }
 
     fun loadPdf(filePath: String): PDDocument {
         return PDDocument.load(File(filePath))
     }
 
+    fun createWithImageMagick(){
+        var list = mutableListOf("convert", "*.jpg", "out9999.pdf")
+        val runtime = Runtime.getRuntime()
+        val str = list.joinToString(" ")
+        try{
+            runtime.exec(str)
+        }catch (e:Exception){
+            println(1)
+        }
+
+        var p: Process? = null
+        val dir = File("C:\\Users\\user\\Desktop\\Korolevna\\") // 実行ディレクトリの指定
+
+        try {
+            p = runtime.exec(str, null, dir) // 実行ディレクトリ(dir)でCommand(mecab.exe)を実行する
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+        try {
+            p!!.waitFor() // プロセスの正常終了まで待機させる
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
+        }
+
+        val `is` = p!!.inputStream // プロセスの結果を変数に格納する
+
+        val br = BufferedReader(InputStreamReader(`is`)) // テキスト読み込みを行えるようにする
+
+
+        while (true) {
+            val line = br.readLine()
+            if (line == null) {
+                break // 全ての行を読み切ったら抜ける
+            } else {
+                println("line : $line") // 実行結果を表示
+            }
+        }
+
+    }
+
+
+    fun do2(){
+        val pb =  ProcessBuilder("cmd.exe", "/C", "start", "convert")
+        pb.redirectErrorStream(true)
+        val env = pb.environment()
+        val a = env.get("Path")
+//        env.put("Path", "C:\\ImageMagick-7.0.11-2-portable-Q16-x64; " + a)
+        val p = pb.start()
+        val br = BufferedReader(InputStreamReader(p.inputStream, "MS932"))
+        var line: String? = null
+        while (br.readLine().also { line = it } != null) {
+            println(line)
+        }
+        println(p.waitFor())
+    }
     /**
      * テキストを追加
      */
@@ -118,7 +180,9 @@ object PdfBoxSample {
         val resourceDir = File(resourceDirPath)
         resourceDir.listFiles { f -> f.isFile }.forEach {
             println("ページ追加:$it.path")
-            var pdImage = PDImageXObject.createFromFile(it.path, doc)
+//            val image = loadImage(it.path);
+//            val pdImage = LosslessFactory.createFromImage(doc, image)
+            val pdImage = PDImageXObject.createFromFileByExtension(File(it.path), doc)
             var page = PDPage(PDRectangle(pdImage.image.width.toFloat(), pdImage.image.height.toFloat()))
             doc.addPage(page)
             var stream = PDPageContentStream(doc, page)
@@ -128,4 +192,17 @@ object PdfBoxSample {
         doc.save(outPutFilePath)
         doc.close()
     }
+
+    fun createPdfFromImagesFromParentDir(resourceDirPath: String){
+        val resourceDir = File(resourceDirPath)
+        resourceDir.listFiles { f -> f.isDirectory }.forEach {
+            createPdfFromImages(it.path, "output/${it.name}_3.pdf")
+        }
+    }
+
+    fun loadImage(path:String): BufferedImage {
+        var image = ImageIO.read(File(path))
+        return image
+    }
+
 }
